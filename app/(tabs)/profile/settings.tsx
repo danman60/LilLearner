@@ -8,7 +8,7 @@ import { CraftButton } from '@/src/components/ui/CraftButton';
 import { ScissorDivider } from '@/src/components/ui/ScissorDivider';
 import { useAuthStore } from '@/src/stores/authStore';
 import { supabase } from '@/src/lib/supabase';
-import * as FileSystem from 'expo-file-system';
+import { Paths, File as ExpoFile } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 export default function SettingsScreen() {
@@ -59,9 +59,9 @@ export default function SettingsScreen() {
         reports: reports.data ?? [],
       };
 
-      const fileUri = `${FileSystem.cacheDirectory}lillearner-export.json`;
-      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(exportData, null, 2));
-      await Sharing.shareAsync(fileUri, { mimeType: 'application/json' });
+      const file = new ExpoFile(Paths.cache, 'lillearner-export.json');
+      file.write(JSON.stringify(exportData, null, 2));
+      await Sharing.shareAsync(file.uri, { mimeType: 'application/json' });
     } catch (err) {
       Alert.alert('Export Failed', 'Could not export your data. Please try again.');
     } finally {
