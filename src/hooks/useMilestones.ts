@@ -2,7 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Milestone } from '../types';
 import { useToastStore } from '../stores/toastStore';
-import { XP_VALUES } from '../config/xp';
+import { useLevelUpStore } from '../stores/levelUpStore';
+import { useAchievementUnlockStore } from '../stores/achievementUnlockStore';
+import { XP_VALUES, calculateLevel } from '../config/xp';
+import { checkAchievements } from '../utils/achievementChecker';
 
 export function useMilestones(childId: string | null, skillId?: string) {
   return useQuery({
@@ -53,6 +56,10 @@ export function useToggleMilestone() {
         .single();
       if (error) throw error;
 
+      let leveledUp = false;
+      let newLevelValue = 0;
+      let newAchievementKeys: string[] = [];
+
       // Award XP for completing milestone
       if (completed) {
         await supabase.from('ll_xp_events').insert({
@@ -69,8 +76,11 @@ export function useToggleMilestone() {
           .eq('child_id', childId)
           .single();
         if (levelData) {
+          const oldLevel = levelData.current_level;
           const newTotalXp = levelData.total_xp + XP_VALUES.COMPLETE_MILESTONE;
-          const newLevel = Math.max(1, Math.floor(Math.sqrt(newTotalXp / 100)));
+          const newLevel = calculateLevel(newTotalXp);
+          newLevelValue = newLevel;
+
           await supabase
             .from('ll_child_levels')
             .update({
@@ -79,17 +89,52 @@ export function useToggleMilestone() {
               updated_at: new Date().toISOString(),
             })
             .eq('child_id', childId);
+
+          if (newLevel > oldLevel) {
+            leveledUp = true;
+          }
+        }
+
+        // Check achievements
+        try {
+          newAchievementKeys = await checkAchievements(childId);
+          for (const key of newAchievementKeys) {
+            await supabase.from('ll_achievements').insert({
+              child_id: childId,
+              achievement_key: key,
+            });
+          }
+        } catch {
+          // Non-critical
         }
       }
 
-      return { data, completed };
+      return { data, completed, leveledUp, newLevel: newLevelValue, newAchievementKeys };
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['milestones'] });
       queryClient.invalidateQueries({ queryKey: ['todayStats'] });
       queryClient.invalidateQueries({ queryKey: ['childLevel'] });
+      queryClient.invalidateQueries({ queryKey: ['achievements'] });
       if (result.completed) {
         showToast(XP_VALUES.COMPLETE_MILESTONE);
+
+        // Trigger level-up overlay if leveled up
+        if (result.leveledUp && result.newLevel > 0) {
+          setTimeout(() => {
+            useLevelUpStore.getState().showLevelUp(result.newLevel);
+          }, 1500);
+        }
+
+        // Trigger achievement unlock overlay
+        if (result.newAchievementKeys.length > 0) {
+          const delay = result.leveledUp ? 4500 : 1500;
+          setTimeout(() => {
+            useAchievementUnlockStore
+              .getState()
+              .showUnlock(result.newAchievementKeys[0]);
+          }, delay);
+        }
       }
     },
   });

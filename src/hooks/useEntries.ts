@@ -3,7 +3,10 @@ import { supabase } from '../lib/supabase';
 import { Entry, EntryType } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { useToastStore } from '../stores/toastStore';
-import { XP_VALUES } from '../config/xp';
+import { useLevelUpStore } from '../stores/levelUpStore';
+import { useAchievementUnlockStore } from '../stores/achievementUnlockStore';
+import { XP_VALUES, calculateLevel } from '../config/xp';
+import { checkAchievements } from '../utils/achievementChecker';
 
 export function useEntries(childId: string | null, categoryId?: string) {
   return useQuery({
@@ -95,9 +98,14 @@ export function useAddEntry() {
         .eq('child_id', entry.child_id)
         .single();
 
+      let leveledUp = false;
+      let newLevelValue = 0;
+
       if (levelData) {
+        const oldLevel = levelData.current_level;
         const newTotalXp = levelData.total_xp + xpAmount;
-        const newLevel = Math.max(1, Math.floor(Math.sqrt(newTotalXp / 100)));
+        const newLevel = calculateLevel(newTotalXp);
+        newLevelValue = newLevel;
 
         await supabase
           .from('ll_child_levels')
@@ -107,16 +115,60 @@ export function useAddEntry() {
             updated_at: new Date().toISOString(),
           })
           .eq('child_id', entry.child_id);
+
+        if (newLevel > oldLevel) {
+          leveledUp = true;
+        }
       }
 
-      return { entry: data as Entry, xpAwarded: xpAmount };
+      // Check achievements in the background
+      let newAchievementKeys: string[] = [];
+      try {
+        newAchievementKeys = await checkAchievements(entry.child_id);
+        for (const key of newAchievementKeys) {
+          await supabase.from('ll_achievements').insert({
+            child_id: entry.child_id,
+            achievement_key: key,
+          });
+        }
+      } catch {
+        // Non-critical — don't fail the entry creation
+      }
+
+      return {
+        entry: data as Entry,
+        xpAwarded: xpAmount,
+        leveledUp,
+        newLevel: newLevelValue,
+        newAchievementKeys,
+      };
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['entries'] });
       queryClient.invalidateQueries({ queryKey: ['recentEntries'] });
       queryClient.invalidateQueries({ queryKey: ['todayStats'] });
       queryClient.invalidateQueries({ queryKey: ['childLevel'] });
+      queryClient.invalidateQueries({ queryKey: ['achievements'] });
       showToast(result.xpAwarded);
+
+      // Trigger level-up overlay if leveled up
+      if (result.leveledUp && result.newLevel > 0) {
+        // Delay slightly so XP toast shows first
+        setTimeout(() => {
+          useLevelUpStore.getState().showLevelUp(result.newLevel);
+        }, 1500);
+      }
+
+      // Trigger achievement unlock overlay
+      if (result.newAchievementKeys.length > 0) {
+        // Delay after level-up if both happened
+        const delay = result.leveledUp ? 4500 : 1500;
+        setTimeout(() => {
+          useAchievementUnlockStore
+            .getState()
+            .showUnlock(result.newAchievementKeys[0]);
+        }, delay);
+      }
     },
   });
 }

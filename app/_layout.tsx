@@ -13,6 +13,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/src/stores/authStore';
 import { XpToast } from '@/src/components/XpToast';
+import { LevelUpOverlay } from '@/src/components/LevelUpOverlay';
+import { AchievementUnlockOverlay } from '@/src/components/AchievementUnlockOverlay';
 import 'react-native-reanimated';
 
 export {
@@ -104,6 +106,8 @@ export default function RootLayout() {
             />
           </Stack>
           <XpToast />
+          <LevelUpOverlay />
+          <AchievementUnlockOverlay />
         </View>
       </AuthGuard>
     </QueryClientProvider>
