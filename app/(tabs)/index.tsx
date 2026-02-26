@@ -1,13 +1,20 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '@/src/config/theme';
+import { CATEGORIES } from '@/src/config/categories';
+import { CategoryConfig } from '@/src/types';
 import ChildSwitcher from '@/src/components/ChildSwitcher';
+import { TodaySummary } from '@/src/components/TodaySummary';
+import { CategoryCard } from '@/src/components/CategoryCard';
+import { MaskingTapeHeader } from '@/src/components/ui';
 import { useChildStore } from '@/src/stores/childStore';
 import { useChildren } from '@/src/hooks/useChildren';
 
 export default function HomeScreen() {
   const { activeChildId, loadActiveChild, setActiveChild } = useChildStore();
   const { data: children } = useChildren();
+  const router = useRouter();
 
   // Load persisted active child on mount
   useEffect(() => {
@@ -23,30 +30,58 @@ export default function HomeScreen() {
 
   const activeChild = children?.find((c) => c.id === activeChildId);
 
+  const handleCategoryPress = (category: CategoryConfig) => {
+    router.push(`/log/${category.id}`);
+  };
+
+  const renderCategoryCard = ({ item, index }: { item: CategoryConfig; index: number }) => (
+    <CategoryCard
+      category={item}
+      index={index}
+      onPress={() => handleCategoryPress(item)}
+    />
+  );
+
+  const ListHeader = () => (
+    <View>
+      <ChildSwitcher />
+
+      {activeChild ? (
+        <>
+          <TodaySummary child={activeChild} />
+          <View style={styles.sectionHeader}>
+            <MaskingTapeHeader title="Categories" />
+          </View>
+        </>
+      ) : (
+        <View style={styles.emptyContent}>
+          <Text style={styles.emoji}>👋</Text>
+          <Text style={styles.title}>Welcome!</Text>
+          <Text style={styles.subtitle}>
+            Add a child to start tracking their learning journey.
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      <ChildSwitcher />
-      <View style={styles.content}>
-        {activeChild ? (
-          <>
-            <Text style={styles.emoji}>🏠</Text>
-            <Text style={styles.title}>
-              Hi, {activeChild.name}!
-            </Text>
-            <Text style={styles.subtitle}>
-              Your dashboard is coming soon!
-            </Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.emoji}>👋</Text>
-            <Text style={styles.title}>Welcome!</Text>
-            <Text style={styles.subtitle}>
-              Add a child to start tracking their learning journey.
-            </Text>
-          </>
-        )}
-      </View>
+      {activeChild ? (
+        <FlatList
+          data={CATEGORIES}
+          renderItem={renderCategoryCard}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          ListHeaderComponent={ListHeader}
+          ListFooterComponent={<View style={{ height: spacing.xxl }} />}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          columnWrapperStyle={styles.row}
+        />
+      ) : (
+        <ListHeader />
+      )}
     </View>
   );
 }
@@ -56,11 +91,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.linedPaper,
   },
-  content: {
+  listContent: {
+    paddingBottom: spacing.lg,
+  },
+  sectionHeader: {
+    paddingHorizontal: spacing.md,
+  },
+  row: {
+    paddingHorizontal: spacing.sm,
+  },
+  emptyContent: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xl,
+    marginTop: spacing.xxl,
   },
   emoji: {
     fontSize: 48,
