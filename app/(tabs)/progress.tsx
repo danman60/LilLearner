@@ -1,12 +1,12 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts, spacing } from '@/src/config/theme';
 
-export default function HomeScreen() {
+export default function ProgressScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.emoji}>🏠</Text>
-      <Text style={styles.title}>Home</Text>
-      <Text style={styles.subtitle}>Your dashboard is coming soon!</Text>
+      <Text style={styles.emoji}>📈</Text>
+      <Text style={styles.title}>Progress</Text>
+      <Text style={styles.subtitle}>Track your little learner's growth!</Text>
     </View>
   );
 }
