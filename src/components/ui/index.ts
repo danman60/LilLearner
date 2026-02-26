@@ -6,3 +6,4 @@ export { MaskingTapeHeader } from './MaskingTapeHeader';
 export { XpBadge } from './XpBadge';
 export { GoldStar } from './GoldStar';
 export { ScissorDivider } from './ScissorDivider';
+export { CraftTabBar } from './CraftTabBar';
