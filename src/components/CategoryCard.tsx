@@ -8,6 +8,7 @@ interface CategoryCardProps {
   category: CategoryConfig;
   index: number;
   onPress: () => void;
+  onLongPress?: () => void;
 }
 
 // Alternating large/small pattern: 0=large, 1,2=small, 3=large, 4,5=small, ...
@@ -16,7 +17,7 @@ function isLargeCard(index: number): boolean {
   return pos === 0 || pos === 3;
 }
 
-export function CategoryCard({ category, index, onPress }: CategoryCardProps) {
+export function CategoryCard({ category, index, onPress, onLongPress }: CategoryCardProps) {
   const large = isLargeCard(index);
 
   return (
@@ -25,6 +26,7 @@ export function CategoryCard({ category, index, onPress }: CategoryCardProps) {
         color={category.color}
         index={index}
         onPress={onPress}
+        onLongPress={onLongPress}
         style={large ? styles.cardLarge : styles.cardSmall}
       >
         <Text style={styles.icon}>{category.icon}</Text>

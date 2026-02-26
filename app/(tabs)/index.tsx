@@ -34,11 +34,16 @@ export default function HomeScreen() {
     router.push(`/log/${category.id}`);
   };
 
+  const handleCategoryLongPress = (category: CategoryConfig) => {
+    router.push(`/category/${category.id}`);
+  };
+
   const renderCategoryCard = ({ item, index }: { item: CategoryConfig; index: number }) => (
     <CategoryCard
       category={item}
       index={index}
       onPress={() => handleCategoryPress(item)}
+      onLongPress={() => handleCategoryLongPress(item)}
     />
   );
 
@@ -51,11 +56,12 @@ export default function HomeScreen() {
           <TodaySummary child={activeChild} />
           <View style={styles.sectionHeader}>
             <MaskingTapeHeader title="Categories" />
+            <Text style={styles.hint}>Tap to log  |  Long press to view timeline</Text>
           </View>
         </>
       ) : (
         <View style={styles.emptyContent}>
-          <Text style={styles.emoji}>👋</Text>
+          <Text style={styles.emoji}>{'\uD83D\uDC4B'}</Text>
           <Text style={styles.title}>Welcome!</Text>
           <Text style={styles.subtitle}>
             Add a child to start tracking their learning journey.
@@ -96,6 +102,14 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     paddingHorizontal: spacing.md,
+  },
+  hint: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    color: '#B0A89A',
+    textAlign: 'center',
+    marginTop: -spacing.sm,
+    marginBottom: spacing.xs,
   },
   row: {
     paddingHorizontal: spacing.sm,

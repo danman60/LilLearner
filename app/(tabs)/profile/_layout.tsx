@@ -28,6 +28,19 @@ export default function ProfileLayout() {
           presentation: 'modal',
         }}
       />
+      <Stack.Screen
+        name="edit-child"
+        options={{
+          title: 'Edit Learner',
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+        }}
+      />
     </Stack>
   );
 }

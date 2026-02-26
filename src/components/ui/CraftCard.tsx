@@ -12,6 +12,7 @@ interface CraftCardProps {
   color?: string;
   index?: number;
   onPress?: () => void;
+  onLongPress?: () => void;
   style?: ViewStyle;
 }
 
@@ -26,6 +27,7 @@ export function CraftCard({
   color = colors.white,
   index = 0,
   onPress,
+  onLongPress,
   style,
 }: CraftCardProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -40,8 +42,10 @@ export function CraftCard({
     borderBottomRightRadius: borderRadius.md + (index % 5),
   };
 
+  const isInteractive = onPress || onLongPress;
+
   const handlePressIn = () => {
-    if (!onPress) return;
+    if (!isInteractive) return;
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 1.02,
@@ -59,7 +63,7 @@ export function CraftCard({
   };
 
   const handlePressOut = () => {
-    if (!onPress) return;
+    if (!isInteractive) return;
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 1,
@@ -97,10 +101,11 @@ export function CraftCard({
     </Animated.View>
   );
 
-  if (onPress) {
+  if (isInteractive) {
     return (
       <Pressable
         onPress={onPress}
+        onLongPress={onLongPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
