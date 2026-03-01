@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import { useRouter, useSegments, Stack } from 'expo-router';
+import { useRouter, useSegments, useRootNavigationState, Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { Gaegu_400Regular, Gaegu_700Bold } from '@expo-google-fonts/gaegu';
 import {
@@ -16,6 +16,7 @@ import { XpToast } from '@/src/components/XpToast';
 import { LevelUpOverlay } from '@/src/components/LevelUpOverlay';
 import { AchievementUnlockOverlay } from '@/src/components/AchievementUnlockOverlay';
 import { FEATURES } from '@/src/config/features';
+import { useFeature } from '@/src/stores/featureStore';
 import { useUserPreferences } from '@/src/hooks/useUserPreferences';
 import 'react-native-reanimated';
 
@@ -42,10 +43,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { session, initialized } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
   const { data: prefs, isLoading: prefsLoading } = useUserPreferences();
 
   useEffect(() => {
+    // Skip all auth redirects during testing
+    if (FEATURES.SKIP_AUTH) return;
+
     if (!initialized) return;
+    if (!rootNavigationState?.key) return; // Navigation not ready yet
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboarding = segments[0] === 'onboarding';
@@ -60,13 +66,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         router.replace('/onboarding/categories');
       }
     }
-  }, [session, initialized, segments, prefs, prefsLoading]);
+  }, [session, initialized, segments, prefs, prefsLoading, rootNavigationState?.key]);
 
   return <>{children}</>;
 }
 
 export default function RootLayout() {
   const initialize = useAuthStore((s) => s.initialize);
+  const gamificationEnabled = useFeature('GAMIFICATION');
 
   const [fontsLoaded, fontError] = useFonts({
     Gaegu_400Regular,
@@ -131,9 +138,9 @@ export default function RootLayout() {
               }}
             />
           </Stack>
-          {FEATURES.GAMIFICATION && <XpToast />}
-          {FEATURES.GAMIFICATION && <LevelUpOverlay />}
-          {FEATURES.GAMIFICATION && <AchievementUnlockOverlay />}
+          {gamificationEnabled && <XpToast />}
+          {gamificationEnabled && <LevelUpOverlay />}
+          {gamificationEnabled && <AchievementUnlockOverlay />}
         </View>
       </AuthGuard>
     </QueryClientProvider>

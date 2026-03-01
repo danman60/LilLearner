@@ -7,7 +7,7 @@ import { useLevelUpStore } from '../stores/levelUpStore';
 import { useAchievementUnlockStore } from '../stores/achievementUnlockStore';
 import { XP_VALUES, calculateLevel } from '../config/xp';
 import { checkAchievements } from '../utils/achievementChecker';
-import { FEATURES } from '../config/features';
+import { useFeatureStore } from '../stores/featureStore';
 
 export function useEntries(childId: string | null, categoryId?: string) {
   return useQuery({
@@ -93,7 +93,7 @@ export function useAddEntry() {
       let newAchievementKeys: string[] = [];
 
       // Only award XP and check achievements when gamification is enabled
-      if (FEATURES.GAMIFICATION) {
+      if (useFeatureStore.getState().flags.GAMIFICATION) {
         xpAmount = XP_VALUES.LOG_ACTIVITY;
         if (entry.entry_type === 'photo') xpAmount = XP_VALUES.ADD_PHOTO;
         if (entry.entry_type === 'note') xpAmount = XP_VALUES.WRITE_NOTE;
@@ -161,7 +161,7 @@ export function useAddEntry() {
       queryClient.invalidateQueries({ queryKey: ['recentEntries'] });
       queryClient.invalidateQueries({ queryKey: ['todayStats'] });
 
-      if (FEATURES.GAMIFICATION) {
+      if (useFeatureStore.getState().flags.GAMIFICATION) {
         queryClient.invalidateQueries({ queryKey: ['childLevel'] });
         queryClient.invalidateQueries({ queryKey: ['achievements'] });
         showToast(result.xpAwarded);

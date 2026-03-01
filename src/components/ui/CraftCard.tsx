@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { colors, borderRadius, spacing, shadows } from '../../config/theme';
-import { FEATURES } from '../../config/features';
+import { useFeature } from '../../stores/featureStore';
 
 interface CraftCardProps {
   children: React.ReactNode;
@@ -33,6 +33,7 @@ export function CraftCard({
 }: CraftCardProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const liftAnim = useRef(new Animated.Value(0)).current;
+  const scrapbook = useFeature('SCRAPBOOK_THEME');
 
   const isInteractive = onPress || onLongPress;
 
@@ -73,7 +74,7 @@ export function CraftCard({
   };
 
   // Plain card when scrapbook theme is off — no rotation, uniform radius
-  if (!FEATURES.SCRAPBOOK_THEME) {
+  if (!scrapbook) {
     const plainContent = (
       <View
         style={[

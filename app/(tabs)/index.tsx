@@ -16,7 +16,7 @@ import { useChildStore } from '@/src/stores/childStore';
 import { useChildren } from '@/src/hooks/useChildren';
 import { useUserCategories } from '@/src/hooks/useUserCategories';
 import { useEntries } from '@/src/hooks/useEntries';
-import { FEATURES } from '@/src/config/features';
+import { useFeature } from '@/src/stores/featureStore';
 
 type CategoryItem =
   | { type: 'hardcoded'; data: CategoryConfig }
@@ -29,6 +29,7 @@ export default function HomeScreen() {
   const { data: allEntries } = useEntries(activeChildId ?? null);
   const router = useRouter();
 
+  const voiceInputEnabled = useFeature('VOICE_INPUT');
   const [reviewEntries, setReviewEntries] = useState<ParsedEntry[] | null>(null);
 
   useEffect(() => {
@@ -100,7 +101,7 @@ export default function HomeScreen() {
           <TodaySummary child={activeChild} />
 
           {/* Quick Log button */}
-          {FEATURES.VOICE_INPUT && (
+          {voiceInputEnabled && (
             <VoiceButton onEntriesParsed={handleEntriesParsed} />
           )}
 

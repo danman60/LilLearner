@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { fonts, spacing } from '../../config/theme';
-import { FEATURES } from '../../config/features';
+import { useFeature } from '../../stores/featureStore';
 
 interface MaskingTapeHeaderProps {
   title: string;
@@ -9,8 +9,10 @@ interface MaskingTapeHeaderProps {
 }
 
 export function MaskingTapeHeader({ title, style }: MaskingTapeHeaderProps) {
+  const scrapbook = useFeature('SCRAPBOOK_THEME');
+
   // Plain bold text when scrapbook theme is off
-  if (!FEATURES.SCRAPBOOK_THEME) {
+  if (!scrapbook) {
     return (
       <View style={[styles.plainContainer, style]}>
         <Text style={styles.plainText}>{title}</Text>

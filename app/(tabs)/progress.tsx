@@ -12,7 +12,7 @@ import { LevelBadge } from '@/src/components/LevelBadge';
 import { StreakDisplay } from '@/src/components/StreakDisplay';
 import { CategoryProgress } from '@/src/components/CategoryProgress';
 import { AchievementWall } from '@/src/components/AchievementWall';
-import { FEATURES } from '@/src/config/features';
+import { useFeature } from '@/src/stores/featureStore';
 import { useSimpleStats, CategoryStats } from '@/src/hooks/useSimpleStats';
 import { useUserCategories } from '@/src/hooks/useUserCategories';
 import { CATEGORIES } from '@/src/config/categories';
@@ -129,6 +129,7 @@ export default function ProgressScreen() {
   const activeChildId = useChildStore((s) => s.activeChildId);
   const { data: levelData } = useChildLevel(activeChildId);
   const { data: streak } = useStreakDays(activeChildId);
+  const gamificationEnabled = useFeature('GAMIFICATION');
 
   if (!activeChildId) {
     return (
@@ -143,7 +144,7 @@ export default function ProgressScreen() {
   }
 
   // Simple stats when gamification is off
-  if (!FEATURES.GAMIFICATION) {
+  if (!gamificationEnabled) {
     return <SimpleStatsView childId={activeChildId} />;
   }
 

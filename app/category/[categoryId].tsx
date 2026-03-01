@@ -14,7 +14,7 @@ import { MaskingTapeHeader, ScissorDivider } from '@/src/components/ui';
 import { EntryTimeline } from '@/src/components/EntryTimeline';
 import { SimpleCategoryTimeline } from '@/src/components/SimpleCategoryTimeline';
 import { useUserCategories } from '@/src/hooks/useUserCategories';
-import { FEATURES } from '@/src/config/features';
+import { useFeature } from '@/src/stores/featureStore';
 
 function isUUID(id: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -57,6 +57,7 @@ function SkillMiniBadge({
 export default function CategoryDeepDiveScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const activeChildId = useChildStore((s) => s.activeChildId);
+  const skillsTracking = useFeature('SKILLS_TRACKING');
   const { data: userCategories } = useUserCategories();
 
   const isUserCat = isUUID(categoryId ?? '');
@@ -130,7 +131,7 @@ export default function CategoryDeepDiveScreen() {
   }
 
   // When skills tracking is off, show simple timeline
-  if (!FEATURES.SKILLS_TRACKING) {
+  if (!skillsTracking) {
     return (
       <>
         <Stack.Screen

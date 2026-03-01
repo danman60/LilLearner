@@ -1,15 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { colors, spacing } from '../../config/theme';
-import { FEATURES } from '../../config/features';
+import { useFeature } from '../../stores/featureStore';
 
 interface ScissorDividerProps {
   style?: ViewStyle;
 }
 
 export function ScissorDivider({ style }: ScissorDividerProps) {
+  const scrapbook = useFeature('SCRAPBOOK_THEME');
+
   // Simple 1px gray line when scrapbook theme is off
-  if (!FEATURES.SCRAPBOOK_THEME) {
+  if (!scrapbook) {
     return <View style={[styles.plainLine, style]} />;
   }
 

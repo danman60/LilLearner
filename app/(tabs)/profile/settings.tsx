@@ -11,6 +11,8 @@ import { supabase } from '@/src/lib/supabase';
 import { Paths, File as ExpoFile } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useUserPreferences, useUpsertPreferences } from '@/src/hooks/useUserPreferences';
+import { useFeatureStore } from '@/src/stores/featureStore';
+import { FEATURES } from '@/src/config/features';
 
 interface FeatureToggleProps {
   label: string;
@@ -45,11 +47,38 @@ export default function SettingsScreen() {
   const [exporting, setExporting] = useState(false);
   const { data: prefs } = useUserPreferences();
   const upsert = useUpsertPreferences();
+  const flags = useFeatureStore((s) => s.flags);
+  const syncFromPrefs = useFeatureStore((s) => s.syncFromPrefs);
+
+  // Map feature store keys to DB pref keys
+  const FLAG_TO_PREF: Record<string, string> = {
+    GAMIFICATION: 'gamification_enabled',
+    SKILLS_TRACKING: 'skills_tracking_enabled',
+    PHOTO_ENTRIES: 'photo_entries_enabled',
+    SCRAPBOOK_THEME: 'scrapbook_theme_enabled',
+    VOICE_INPUT: 'voice_input_enabled',
+    BOOK_TRACKING: 'book_tracking_enabled',
+  };
 
   const handleToggle = (key: string) => {
-    if (!prefs) return;
-    const current = prefs[key as keyof typeof prefs] as boolean;
-    upsert.mutate({ [key]: !current });
+    if (prefs) {
+      // Authenticated: update DB (store syncs via query invalidation)
+      const current = prefs[key as keyof typeof prefs] as boolean;
+      upsert.mutate({ [key]: !current });
+    } else {
+      // No auth (SKIP_AUTH mode): update store directly
+      const flagKey = Object.entries(FLAG_TO_PREF).find(([, v]) => v === key)?.[0] as keyof typeof FEATURES | undefined;
+      if (flagKey) {
+        syncFromPrefs({
+          gamification_enabled: flagKey === 'GAMIFICATION' ? !flags.GAMIFICATION : flags.GAMIFICATION,
+          skills_tracking_enabled: flagKey === 'SKILLS_TRACKING' ? !flags.SKILLS_TRACKING : flags.SKILLS_TRACKING,
+          photo_entries_enabled: flagKey === 'PHOTO_ENTRIES' ? !flags.PHOTO_ENTRIES : flags.PHOTO_ENTRIES,
+          scrapbook_theme_enabled: flagKey === 'SCRAPBOOK_THEME' ? !flags.SCRAPBOOK_THEME : flags.SCRAPBOOK_THEME,
+          voice_input_enabled: flagKey === 'VOICE_INPUT' ? !flags.VOICE_INPUT : flags.VOICE_INPUT,
+          book_tracking_enabled: flagKey === 'BOOK_TRACKING' ? !flags.BOOK_TRACKING : flags.BOOK_TRACKING,
+        });
+      }
+    }
   };
 
   const handleSignOut = () => {
@@ -151,58 +180,54 @@ export default function SettingsScreen() {
       <View style={styles.content}>
         <MaskingTapeHeader title="Settings" />
 
-        {/* Features section */}
-        {prefs && (
-          <>
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Features</Text>
-              <FeatureToggle
-                label="XP & Levels"
-                description="Earn XP, level up, unlock achievements"
-                value={prefs.gamification_enabled}
-                onToggle={() => handleToggle('gamification_enabled')}
-                saving={upsert.isPending}
-              />
-              <FeatureToggle
-                label="Photo Entries"
-                description="Attach photos to log entries"
-                value={prefs.photo_entries_enabled}
-                onToggle={() => handleToggle('photo_entries_enabled')}
-                saving={upsert.isPending}
-              />
-              <FeatureToggle
-                label="Skill Tracking"
-                description="Track individual skills within categories"
-                value={prefs.skills_tracking_enabled}
-                onToggle={() => handleToggle('skills_tracking_enabled')}
-                saving={upsert.isPending}
-              />
-              <FeatureToggle
-                label="Scrapbook Theme"
-                description="Notebook paper, masking tape, craft aesthetic"
-                value={prefs.scrapbook_theme_enabled}
-                onToggle={() => handleToggle('scrapbook_theme_enabled')}
-                saving={upsert.isPending}
-              />
-              <FeatureToggle
-                label="Voice Input"
-                description="Quick log with natural language parsing"
-                value={prefs.voice_input_enabled}
-                onToggle={() => handleToggle('voice_input_enabled')}
-                saving={upsert.isPending}
-              />
-              <FeatureToggle
-                label="Book Tracking"
-                description="Track active read-aloud books"
-                value={prefs.book_tracking_enabled}
-                onToggle={() => handleToggle('book_tracking_enabled')}
-                saving={upsert.isPending}
-              />
-            </View>
+        {/* Features section — uses DB prefs when authenticated, feature store when not */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Features</Text>
+          <FeatureToggle
+            label="XP & Levels"
+            description="Earn XP, level up, unlock achievements"
+            value={prefs ? prefs.gamification_enabled : flags.GAMIFICATION}
+            onToggle={() => handleToggle('gamification_enabled')}
+            saving={upsert.isPending}
+          />
+          <FeatureToggle
+            label="Photo Entries"
+            description="Attach photos to log entries"
+            value={prefs ? prefs.photo_entries_enabled : flags.PHOTO_ENTRIES}
+            onToggle={() => handleToggle('photo_entries_enabled')}
+            saving={upsert.isPending}
+          />
+          <FeatureToggle
+            label="Skill Tracking"
+            description="Track individual skills within categories"
+            value={prefs ? prefs.skills_tracking_enabled : flags.SKILLS_TRACKING}
+            onToggle={() => handleToggle('skills_tracking_enabled')}
+            saving={upsert.isPending}
+          />
+          <FeatureToggle
+            label="Scrapbook Theme"
+            description="Notebook paper, masking tape, craft aesthetic"
+            value={prefs ? prefs.scrapbook_theme_enabled : flags.SCRAPBOOK_THEME}
+            onToggle={() => handleToggle('scrapbook_theme_enabled')}
+            saving={upsert.isPending}
+          />
+          <FeatureToggle
+            label="Voice Input"
+            description="Quick log with natural language parsing"
+            value={prefs ? prefs.voice_input_enabled : flags.VOICE_INPUT}
+            onToggle={() => handleToggle('voice_input_enabled')}
+            saving={upsert.isPending}
+          />
+          <FeatureToggle
+            label="Book Tracking"
+            description="Track active read-aloud books"
+            value={prefs ? prefs.book_tracking_enabled : flags.BOOK_TRACKING}
+            onToggle={() => handleToggle('book_tracking_enabled')}
+            saving={upsert.isPending}
+          />
+        </View>
 
-            <ScissorDivider style={styles.divider} />
-          </>
-        )}
+        <ScissorDivider style={styles.divider} />
 
         {/* About section */}
         <View style={styles.card}>

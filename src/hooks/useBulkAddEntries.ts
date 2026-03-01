@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { Entry, UserCategory } from '../types';
-import { FEATURES } from '../config/features';
+import { useFeatureStore } from '../stores/featureStore';
 import { XP_VALUES } from '../config/xp';
 
 interface BulkEntryInput {
@@ -44,7 +44,7 @@ export function useBulkAddEntries() {
       if (error) throw error;
 
       // Optional XP when gamification is on
-      if (FEATURES.GAMIFICATION && data) {
+      if (useFeatureStore.getState().flags.GAMIFICATION && data) {
         const xpRows = data.map((entry: Entry) => ({
           child_id: entry.child_id,
           xp_amount: XP_VALUES.LOG_ACTIVITY,

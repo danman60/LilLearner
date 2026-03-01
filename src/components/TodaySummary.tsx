@@ -5,7 +5,7 @@ import { colors, fonts, spacing } from '../config/theme';
 import { getLevelProgress, getLevelTitle } from '../config/xp';
 import { useTodayStats } from '../hooks/useTodayStats';
 import { Child } from '../types';
-import { FEATURES } from '../config/features';
+import { useFeature } from '../stores/featureStore';
 
 interface TodaySummaryProps {
   child: Child;
@@ -20,11 +20,12 @@ function formatDate(): string {
 
 export function TodaySummary({ child }: TodaySummaryProps) {
   const { data: stats, isLoading } = useTodayStats(child.id);
+  const gamificationEnabled = useFeature('GAMIFICATION');
 
   const todayCount = stats?.todayCount ?? 0;
 
   // Simple mode: just child name, date, and entry count
-  if (!FEATURES.GAMIFICATION) {
+  if (!gamificationEnabled) {
     return (
       <CraftCard color="rgba(91, 155, 213, 0.08)" index={99} style={styles.card}>
         <View style={styles.header}>

@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { colors } from '../../config/theme';
-import { FEATURES } from '../../config/features';
+import { useFeature } from '../../stores/featureStore';
 
 interface PaperBackgroundProps {
   children: React.ReactNode;
@@ -24,8 +24,10 @@ export function PaperBackground({
   scroll = true,
   style,
 }: PaperBackgroundProps) {
+  const scrapbook = useFeature('SCRAPBOOK_THEME');
+
   // Plain white background when scrapbook theme is off
-  if (!FEATURES.SCRAPBOOK_THEME) {
+  if (!scrapbook) {
     if (scroll) {
       return (
         <ScrollView

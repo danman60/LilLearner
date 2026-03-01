@@ -24,7 +24,7 @@ import { ActiveBooksList } from '@/src/components/ActiveBooksList';
 import { useAddEntry } from '@/src/hooks/useEntries';
 import { useUserCategories } from '@/src/hooks/useUserCategories';
 import { SkillConfig, TrackingType } from '@/src/types';
-import { FEATURES } from '@/src/config/features';
+import { useFeature } from '@/src/stores/featureStore';
 
 function SkillEntry({
   skill,
@@ -96,6 +96,8 @@ export default function CategoryLogScreen() {
   const [quickNote, setQuickNote] = useState('');
   const addEntry = useAddEntry();
 
+  const skillsTracking = useFeature('SKILLS_TRACKING');
+  const photoEntries = useFeature('PHOTO_ENTRIES');
   const { data: userCategories } = useUserCategories();
   const isUserCategory = isUUID(categoryId ?? '');
   const userCategory = isUserCategory
@@ -151,7 +153,7 @@ export default function CategoryLogScreen() {
   }
 
   // When skills tracking is off, show simple entry form instead
-  if (!FEATURES.SKILLS_TRACKING) {
+  if (!skillsTracking) {
     return (
       <>
         <Stack.Screen
@@ -229,7 +231,7 @@ export default function CategoryLogScreen() {
           <ScissorDivider />
 
           {/* Photo capture — only when enabled */}
-          {FEATURES.PHOTO_ENTRIES && (
+          {photoEntries && (
             <View style={styles.actionSection}>
               <Text style={styles.actionLabel}>Add a Photo</Text>
               <PhotoEntry
