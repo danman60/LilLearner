@@ -3,25 +3,32 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '@/src/config/theme';
 import { CATEGORIES } from '@/src/config/categories';
-import { CategoryConfig } from '@/src/types';
+import { CategoryConfig, UserCategory } from '@/src/types';
 import ChildSwitcher from '@/src/components/ChildSwitcher';
 import { TodaySummary } from '@/src/components/TodaySummary';
 import { CategoryCard } from '@/src/components/CategoryCard';
+import { SimpleCategoryCard } from '@/src/components/SimpleCategoryCard';
 import { MaskingTapeHeader } from '@/src/components/ui';
 import { useChildStore } from '@/src/stores/childStore';
 import { useChildren } from '@/src/hooks/useChildren';
+import { useUserCategories } from '@/src/hooks/useUserCategories';
+import { useEntries } from '@/src/hooks/useEntries';
+
+type CategoryItem =
+  | { type: 'hardcoded'; data: CategoryConfig }
+  | { type: 'user'; data: UserCategory };
 
 export default function HomeScreen() {
   const { activeChildId, loadActiveChild, setActiveChild } = useChildStore();
   const { data: children } = useChildren();
+  const { data: userCategories } = useUserCategories();
+  const { data: allEntries } = useEntries(activeChildId ?? null);
   const router = useRouter();
 
-  // Load persisted active child on mount
   useEffect(() => {
     loadActiveChild();
   }, []);
 
-  // Auto-select first child if none is active
   useEffect(() => {
     if (!activeChildId && children && children.length > 0) {
       setActiveChild(children[0].id);
@@ -30,22 +37,53 @@ export default function HomeScreen() {
 
   const activeChild = children?.find((c) => c.id === activeChildId);
 
-  const handleCategoryPress = (category: CategoryConfig) => {
-    router.push(`/log/${category.id}`);
+  // Build category list: prefer user categories if any exist, else fall back to hardcoded
+  const hasUserCategories = userCategories && userCategories.length > 0;
+
+  const categoryItems: CategoryItem[] = hasUserCategories
+    ? userCategories.map((uc) => ({ type: 'user' as const, data: uc }))
+    : CATEGORIES.map((c) => ({ type: 'hardcoded' as const, data: c }));
+
+  // Count entries per user category
+  const entryCounts: Record<string, number> = {};
+  if (allEntries && hasUserCategories) {
+    for (const entry of allEntries) {
+      if (entry.user_category_id) {
+        entryCounts[entry.user_category_id] = (entryCounts[entry.user_category_id] ?? 0) + 1;
+      }
+    }
+  }
+
+  const handlePress = (item: CategoryItem) => {
+    const id = item.type === 'user' ? item.data.id : item.data.id;
+    router.push(`/log/${id}`);
   };
 
-  const handleCategoryLongPress = (category: CategoryConfig) => {
-    router.push(`/category/${category.id}`);
+  const handleLongPress = (item: CategoryItem) => {
+    const id = item.type === 'user' ? item.data.id : item.data.id;
+    router.push(`/category/${id}`);
   };
 
-  const renderCategoryCard = ({ item, index }: { item: CategoryConfig; index: number }) => (
-    <CategoryCard
-      category={item}
-      index={index}
-      onPress={() => handleCategoryPress(item)}
-      onLongPress={() => handleCategoryLongPress(item)}
-    />
-  );
+  const renderItem = ({ item, index }: { item: CategoryItem; index: number }) => {
+    if (item.type === 'user') {
+      return (
+        <SimpleCategoryCard
+          category={item.data}
+          entryCount={entryCounts[item.data.id] ?? 0}
+          onPress={() => handlePress(item)}
+          onLongPress={() => handleLongPress(item)}
+        />
+      );
+    }
+    return (
+      <CategoryCard
+        category={item.data}
+        index={index}
+        onPress={() => handlePress(item)}
+        onLongPress={() => handleLongPress(item)}
+      />
+    );
+  };
 
   const ListHeader = () => (
     <View>
@@ -75,9 +113,9 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {activeChild ? (
         <FlatList
-          data={CATEGORIES}
-          renderItem={renderCategoryCard}
-          keyExtractor={(item) => item.id}
+          data={categoryItems}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.data.id}
           numColumns={2}
           ListHeaderComponent={ListHeader}
           ListFooterComponent={<View style={{ height: spacing.xxl }} />}

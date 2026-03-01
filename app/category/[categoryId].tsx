@@ -12,7 +12,13 @@ import { useChildStore } from '@/src/stores/childStore';
 import { useSkillProgress } from '@/src/hooks/useProgress';
 import { MaskingTapeHeader, ScissorDivider } from '@/src/components/ui';
 import { EntryTimeline } from '@/src/components/EntryTimeline';
+import { SimpleCategoryTimeline } from '@/src/components/SimpleCategoryTimeline';
+import { useUserCategories } from '@/src/hooks/useUserCategories';
 import { FEATURES } from '@/src/config/features';
+
+function isUUID(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
 
 function SkillMiniBadge({
   name,
@@ -27,7 +33,6 @@ function SkillMiniBadge({
   isLogType: boolean;
   color: string;
 }) {
-  const progress = total > 0 ? completed / total : 0;
   const isDone = !isLogType && total > 0 && completed >= total;
 
   return (
@@ -52,9 +57,56 @@ function SkillMiniBadge({
 export default function CategoryDeepDiveScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const activeChildId = useChildStore((s) => s.activeChildId);
-  const category = getCategoryById(categoryId ?? '');
-  const { data: skillProgress } = useSkillProgress(activeChildId, categoryId ?? '');
+  const { data: userCategories } = useUserCategories();
 
+  const isUserCat = isUUID(categoryId ?? '');
+  const userCategory = isUserCat
+    ? userCategories?.find((c) => c.id === categoryId)
+    : null;
+  const category = isUserCat ? null : getCategoryById(categoryId ?? '');
+
+  const { data: skillProgress } = useSkillProgress(
+    activeChildId,
+    !isUserCat ? (categoryId ?? '') : ''
+  );
+
+  // User category — show simple timeline
+  if (isUserCat) {
+    if (!activeChildId) {
+      return (
+        <>
+          <Stack.Screen options={{ headerTitle: 'Category' }} />
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Please select a child first</Text>
+          </View>
+        </>
+      );
+    }
+
+    const title = userCategory
+      ? `${userCategory.icon || ''} ${userCategory.name}`.trim()
+      : 'Category';
+
+    return (
+      <>
+        <Stack.Screen options={{ headerTitle: title }} />
+        <View style={styles.container}>
+          <View style={styles.topSection}>
+            <MaskingTapeHeader title={title} />
+            <ScissorDivider />
+          </View>
+          <SimpleCategoryTimeline
+            childId={activeChildId}
+            categoryId={categoryId ?? ''}
+            totalLessons={userCategory?.total_lessons}
+            categoryColor={userCategory?.color}
+          />
+        </View>
+      </>
+    );
+  }
+
+  // Hardcoded category
   if (!category) {
     return (
       <>
@@ -77,6 +129,27 @@ export default function CategoryDeepDiveScreen() {
     );
   }
 
+  // When skills tracking is off, show simple timeline
+  if (!FEATURES.SKILLS_TRACKING) {
+    return (
+      <>
+        <Stack.Screen
+          options={{ headerTitle: `${category.icon} ${category.name}` }}
+        />
+        <View style={styles.container}>
+          <View style={styles.topSection}>
+            <MaskingTapeHeader title={`${category.icon} ${category.name}`} />
+            <ScissorDivider />
+          </View>
+          <SimpleCategoryTimeline
+            childId={activeChildId}
+            categoryId={category.id}
+          />
+        </View>
+      </>
+    );
+  }
+
   return (
     <>
       <Stack.Screen
@@ -88,42 +161,38 @@ export default function CategoryDeepDiveScreen() {
         <View style={styles.topSection}>
           <MaskingTapeHeader title={`${category.icon} ${category.name}`} />
 
-          {/* Skill badges — only when skills tracking is on */}
-          {FEATURES.SKILLS_TRACKING && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.badgeScroll}
-            >
-              {category.skills.map((skill) => {
-                const isLogType =
-                  skill.tracking_type === 'activity_log' ||
-                  skill.tracking_type === 'observation_log' ||
-                  skill.tracking_type === 'topic_log';
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.badgeScroll}
+          >
+            {category.skills.map((skill) => {
+              const isLogType =
+                skill.tracking_type === 'activity_log' ||
+                skill.tracking_type === 'observation_log' ||
+                skill.tracking_type === 'topic_log';
 
-                const milestoneTotal =
-                  skill.milestones?.length ?? skill.items?.length ?? 0;
-                const completed = skillProgress?.[skill.id] ?? 0;
-                const total = isLogType ? completed : milestoneTotal;
+              const milestoneTotal =
+                skill.milestones?.length ?? skill.items?.length ?? 0;
+              const completed = skillProgress?.[skill.id] ?? 0;
+              const total = isLogType ? completed : milestoneTotal;
 
-                return (
-                  <SkillMiniBadge
-                    key={skill.id}
-                    name={skill.name}
-                    completed={completed}
-                    total={total}
-                    isLogType={isLogType}
-                    color={category.color}
-                  />
-                );
-              })}
-            </ScrollView>
-          )}
+              return (
+                <SkillMiniBadge
+                  key={skill.id}
+                  name={skill.name}
+                  completed={completed}
+                  total={total}
+                  isLogType={isLogType}
+                  color={category.color}
+                />
+              );
+            })}
+          </ScrollView>
 
           <ScissorDivider />
         </View>
 
-        {/* Timeline — entry list with lesson numbers */}
         <EntryTimeline
           childId={activeChildId}
           categoryId={category.id}
