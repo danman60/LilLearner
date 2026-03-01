@@ -289,12 +289,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.warmWhite,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     ...shadows.small,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: 'rgba(139, 126, 106, 0.08)',
     marginTop: spacing.sm,
   },
   cardTitle: {

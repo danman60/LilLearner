@@ -10,6 +10,8 @@ export const colors = {
   eraserPink: '#FFB5B5',
   notebookBlue: '#C5D9F0',
   white: '#FFFFFF',
+  warmWhite: '#FFF9F3',
+  warmGray: '#F5F0EA',
   black: '#000000',
   transparent: 'transparent',
 } as const;

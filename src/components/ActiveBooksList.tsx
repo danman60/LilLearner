@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   bookRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.warmWhite,
     borderRadius: borderRadius.sm,
     padding: spacing.md,
     marginBottom: spacing.xs,
@@ -182,11 +182,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 14,
     color: '#333333',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.warmGray,
     borderRadius: borderRadius.sm,
     padding: spacing.sm + 2,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(139, 126, 106, 0.15)',
   },
   addButton: {
     width: 36,

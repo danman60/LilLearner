@@ -10,7 +10,7 @@ export default function TabLayout() {
       tabBar={FEATURES.SCRAPBOOK_THEME ? (props) => <CraftTabBar {...props} /> : undefined}
       screenOptions={{
         headerStyle: {
-          backgroundColor: FEATURES.SCRAPBOOK_THEME ? colors.linedPaper : '#FFFFFF',
+          backgroundColor: FEATURES.SCRAPBOOK_THEME ? colors.linedPaper : colors.warmWhite,
           shadowColor: 'transparent',
           elevation: 0,
         },

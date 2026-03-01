@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
 const simpleStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.warmWhite,
   },
   scrollContent: {
     padding: spacing.md,
@@ -243,7 +243,7 @@ const simpleStyles = StyleSheet.create({
     color: '#8B7E6A',
   },
   summaryCard: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: colors.warmGray,
     borderRadius: borderRadius.md,
     padding: spacing.lg,
     marginBottom: spacing.lg,
@@ -274,7 +274,7 @@ const simpleStyles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   statCard: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: colors.warmGray,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,

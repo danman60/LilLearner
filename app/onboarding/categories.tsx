@@ -160,7 +160,7 @@ export default function OnboardingCategoriesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.warmWhite,
   },
   scrollContent: {
     padding: spacing.lg,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
     borderRadius: borderRadius.xl,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.warmGray,
     borderWidth: 2,
     borderColor: 'transparent',
   },
@@ -219,11 +219,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 16,
     color: '#333333',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.warmGray,
     borderRadius: borderRadius.sm,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(139, 126, 106, 0.15)',
   },
   addButton: {
     width: 44,

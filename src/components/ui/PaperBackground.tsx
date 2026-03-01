@@ -84,11 +84,11 @@ export function PaperBackground({
 const styles = StyleSheet.create({
   plainScrollView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.warmWhite,
   },
   plainContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.warmWhite,
   },
   scrollView: {
     flex: 1,

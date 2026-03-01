@@ -113,7 +113,7 @@ export default function OnboardingPreferencesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.warmWhite,
   },
   content: {
     flex: 1,
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9F9F9',
+    backgroundColor: colors.warmGray,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     ...shadows.small,

@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   progressHeader: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.warmWhite,
     padding: spacing.md,
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   },
   entryContent: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.warmWhite,
     padding: spacing.md,
     borderRadius: borderRadius.sm,
     ...shadows.small,

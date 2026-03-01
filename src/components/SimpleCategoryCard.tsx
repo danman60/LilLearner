@@ -33,11 +33,13 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.warmWhite,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     alignItems: 'center',
     borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 126, 106, 0.1)',
     ...shadows.small,
   },
   icon: {

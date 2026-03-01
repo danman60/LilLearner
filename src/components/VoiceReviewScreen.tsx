@@ -154,13 +154,13 @@ export function VoiceReviewScreen({ entries: initialEntries, onDone, onCancel }:
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.warmWhite,
   },
   header: {
     padding: spacing.lg,
     paddingTop: spacing.xxl,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: 'rgba(139, 126, 106, 0.15)',
   },
   title: {
     fontFamily: fonts.bodyBold,
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   entryCard: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: colors.warmGray,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
@@ -245,11 +245,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 13,
     color: '#333333',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.warmWhite,
     borderRadius: borderRadius.sm,
     padding: spacing.sm,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(139, 126, 106, 0.15)',
     marginTop: spacing.xs,
     minHeight: 36,
   },
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     gap: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: 'rgba(139, 126, 106, 0.15)',
   },
   cancelButton: {
     flex: 1,

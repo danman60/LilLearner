@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.warmWhite,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: spacing.lg,
@@ -177,12 +177,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: 16,
     color: '#333333',
-    backgroundColor: '#F9F9F9',
+    backgroundColor: colors.warmGray,
     borderRadius: borderRadius.sm,
     padding: spacing.md,
     minHeight: 120,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(139, 126, 106, 0.15)',
     marginBottom: spacing.md,
   },
   errorText: {
