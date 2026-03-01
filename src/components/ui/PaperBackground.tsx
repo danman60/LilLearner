@@ -7,6 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { colors } from '../../config/theme';
+import { FEATURES } from '../../config/features';
 
 interface PaperBackgroundProps {
   children: React.ReactNode;
@@ -23,6 +24,22 @@ export function PaperBackground({
   scroll = true,
   style,
 }: PaperBackgroundProps) {
+  // Plain white background when scrapbook theme is off
+  if (!FEATURES.SCRAPBOOK_THEME) {
+    if (scroll) {
+      return (
+        <ScrollView
+          style={[styles.plainScrollView, style]}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </ScrollView>
+      );
+    }
+    return <View style={[styles.plainContainer, style]}>{children}</View>;
+  }
+
   const lines = React.useMemo(() => {
     const result: React.ReactNode[] = [];
     for (let i = 0; i < LINE_COUNT; i++) {
@@ -41,13 +58,10 @@ export function PaperBackground({
 
   const content = (
     <View style={[styles.container, style]}>
-      {/* Notebook lines layer */}
       <View style={styles.linesContainer} pointerEvents="none">
         {lines}
         <View style={styles.redMargin} />
       </View>
-
-      {/* Content layer */}
       <View style={styles.contentLayer}>{children}</View>
     </View>
   );
@@ -68,6 +82,14 @@ export function PaperBackground({
 }
 
 const styles = StyleSheet.create({
+  plainScrollView: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  plainContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
   scrollView: {
     flex: 1,
     backgroundColor: colors.linedPaper,

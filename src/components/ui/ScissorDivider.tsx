@@ -1,12 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { colors, spacing } from '../../config/theme';
+import { FEATURES } from '../../config/features';
 
 interface ScissorDividerProps {
   style?: ViewStyle;
 }
 
 export function ScissorDivider({ style }: ScissorDividerProps) {
+  // Simple 1px gray line when scrapbook theme is off
+  if (!FEATURES.SCRAPBOOK_THEME) {
+    return <View style={[styles.plainLine, style]} />;
+  }
+
   return (
     <View style={[styles.container, style]}>
       <Text style={styles.scissors}>{'\u2702\uFE0F'}</Text>
@@ -16,6 +22,11 @@ export function ScissorDivider({ style }: ScissorDividerProps) {
 }
 
 const styles = StyleSheet.create({
+  plainLine: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: spacing.md,
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',

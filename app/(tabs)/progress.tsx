@@ -12,6 +12,7 @@ import { LevelBadge } from '@/src/components/LevelBadge';
 import { StreakDisplay } from '@/src/components/StreakDisplay';
 import { CategoryProgress } from '@/src/components/CategoryProgress';
 import { AchievementWall } from '@/src/components/AchievementWall';
+import { FEATURES } from '@/src/config/features';
 
 export default function ProgressScreen() {
   const activeChildId = useChildStore((s) => s.activeChildId);
@@ -30,6 +31,19 @@ export default function ProgressScreen() {
     );
   }
 
+  // Simple stats placeholder when gamification is off
+  if (!FEATURES.GAMIFICATION) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyEmoji}>{'\uD83D\uDCCA'}</Text>
+        <Text style={styles.emptyTitle}>Simple Stats</Text>
+        <Text style={styles.emptySubtitle}>
+          Coming soon — per-category counts, averages, and trends.
+        </Text>
+      </View>
+    );
+  }
+
   const totalXp = levelData?.total_xp ?? 0;
   const { level } = getLevelProgress(totalXp);
   const title = getLevelTitle(level);
@@ -37,33 +51,25 @@ export default function ProgressScreen() {
   return (
     <PaperBackground scroll>
       <View style={styles.content}>
-        {/* XP Bar — full width */}
         <View style={styles.xpSection}>
           <XpBar totalXp={totalXp} />
         </View>
 
-        {/* Level Badge — centered */}
         <View style={styles.levelSection}>
           <LevelBadge level={level} title={title} />
         </View>
 
-        {/* Streak Display */}
         <StreakDisplay streak={streak ?? 0} />
 
-        {/* Divider */}
         <ScissorDivider style={styles.divider} />
 
-        {/* Skills Section */}
         <MaskingTapeHeader title="Skills" />
         <CategoryProgress childId={activeChildId} />
 
-        {/* Divider */}
         <ScissorDivider style={styles.divider} />
 
-        {/* Achievements Section */}
         <AchievementWall childId={activeChildId} />
 
-        {/* Bottom padding */}
         <View style={styles.bottomPad} />
       </View>
     </PaperBackground>

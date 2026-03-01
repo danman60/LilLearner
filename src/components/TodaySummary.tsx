@@ -5,6 +5,7 @@ import { colors, fonts, spacing } from '../config/theme';
 import { getLevelProgress, getLevelTitle } from '../config/xp';
 import { useTodayStats } from '../hooks/useTodayStats';
 import { Child } from '../types';
+import { FEATURES } from '../config/features';
 
 interface TodaySummaryProps {
   child: Child;
@@ -20,9 +21,28 @@ function formatDate(): string {
 export function TodaySummary({ child }: TodaySummaryProps) {
   const { data: stats, isLoading } = useTodayStats(child.id);
 
+  const todayCount = stats?.todayCount ?? 0;
+
+  // Simple mode: just child name, date, and entry count
+  if (!FEATURES.GAMIFICATION) {
+    return (
+      <CraftCard color="rgba(91, 155, 213, 0.08)" index={99} style={styles.card}>
+        <View style={styles.header}>
+          <View style={styles.headerText}>
+            <Text style={styles.childName}>{child.name}'s Day</Text>
+            <Text style={styles.date}>{formatDate()}</Text>
+          </View>
+        </View>
+        <View style={styles.simpleStatsRow}>
+          <Text style={styles.statValue}>{todayCount}</Text>
+          <Text style={styles.statLabel}>logged today</Text>
+        </View>
+      </CraftCard>
+    );
+  }
+
   const totalXp = stats?.totalXp ?? 0;
   const currentLevel = stats?.currentLevel ?? 1;
-  const todayCount = stats?.todayCount ?? 0;
   const levelProgress = getLevelProgress(totalXp);
   const levelTitle = getLevelTitle(currentLevel);
 
@@ -53,7 +73,6 @@ export function TodaySummary({ child }: TodaySummaryProps) {
         </View>
       </View>
 
-      {/* XP progress bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View
@@ -96,6 +115,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#8B7E6A',
     marginTop: 2,
+  },
+  simpleStatsRow: {
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
   },
   statsRow: {
     flexDirection: 'row',

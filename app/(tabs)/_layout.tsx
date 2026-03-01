@@ -2,21 +2,22 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { colors, fonts } from '@/src/config/theme';
 import { CraftTabBar } from '@/src/components/ui/CraftTabBar';
+import { FEATURES } from '@/src/config/features';
 
 export default function TabLayout() {
   return (
     <Tabs
-      tabBar={(props) => <CraftTabBar {...props} />}
+      tabBar={FEATURES.SCRAPBOOK_THEME ? (props) => <CraftTabBar {...props} /> : undefined}
       screenOptions={{
         headerStyle: {
-          backgroundColor: colors.linedPaper,
+          backgroundColor: FEATURES.SCRAPBOOK_THEME ? colors.linedPaper : '#FFFFFF',
           shadowColor: 'transparent',
           elevation: 0,
         },
         headerTitleStyle: {
-          fontFamily: fonts.displayBold,
+          fontFamily: FEATURES.SCRAPBOOK_THEME ? fonts.displayBold : fonts.bodyBold,
           fontSize: 22,
-          color: colors.pencilGray,
+          color: FEATURES.SCRAPBOOK_THEME ? colors.pencilGray : '#333333',
         },
       }}
     >

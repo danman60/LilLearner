@@ -4,8 +4,10 @@ import {
   Animated,
   StyleSheet,
   ViewStyle,
+  View,
 } from 'react-native';
 import { colors, borderRadius, spacing, shadows } from '../../config/theme';
+import { FEATURES } from '../../config/features';
 
 interface CraftCardProps {
   children: React.ReactNode;
@@ -16,10 +18,9 @@ interface CraftCardProps {
   style?: ViewStyle;
 }
 
-// Seeded rotation from index for consistency
 function getRotation(index: number): number {
-  const seed = ((index * 7 + 13) % 20) - 10; // range -10 to 9
-  return seed / 10; // range -1 to 0.9
+  const seed = ((index * 7 + 13) % 20) - 10;
+  return seed / 10;
 }
 
 export function CraftCard({
@@ -32,15 +33,6 @@ export function CraftCard({
 }: CraftCardProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const liftAnim = useRef(new Animated.Value(0)).current;
-  const rotation = getRotation(index);
-
-  // Irregular border radii
-  const cornerRadii = {
-    borderTopLeftRadius: borderRadius.md + (index % 3),
-    borderTopRightRadius: borderRadius.md + ((index + 1) % 4),
-    borderBottomLeftRadius: borderRadius.md + ((index + 2) % 3),
-    borderBottomRightRadius: borderRadius.md + (index % 5),
-  };
 
   const isInteractive = onPress || onLongPress;
 
@@ -78,6 +70,40 @@ export function CraftCard({
         bounciness: 4,
       }),
     ]).start();
+  };
+
+  // Plain card when scrapbook theme is off — no rotation, uniform radius
+  if (!FEATURES.SCRAPBOOK_THEME) {
+    const plainContent = (
+      <View
+        style={[
+          styles.plainCard,
+          { backgroundColor: color },
+          shadows.small,
+          style,
+        ]}
+      >
+        {children}
+      </View>
+    );
+
+    if (isInteractive) {
+      return (
+        <Pressable onPress={onPress} onLongPress={onLongPress}>
+          {plainContent}
+        </Pressable>
+      );
+    }
+    return plainContent;
+  }
+
+  // Scrapbook card — rotation, irregular corners, spring animation
+  const rotation = getRotation(index);
+  const cornerRadii = {
+    borderTopLeftRadius: borderRadius.md + (index % 3),
+    borderTopRightRadius: borderRadius.md + ((index + 1) % 4),
+    borderBottomLeftRadius: borderRadius.md + ((index + 2) % 3),
+    borderBottomRightRadius: borderRadius.md + (index % 5),
   };
 
   const cardContent = (
@@ -118,6 +144,11 @@ export function CraftCard({
 }
 
 const styles = StyleSheet.create({
+  plainCard: {
+    padding: spacing.md,
+    marginVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+  },
   card: {
     padding: spacing.md,
     marginVertical: spacing.sm,

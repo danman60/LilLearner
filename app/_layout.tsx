@@ -15,6 +15,7 @@ import { useAuthStore } from '@/src/stores/authStore';
 import { XpToast } from '@/src/components/XpToast';
 import { LevelUpOverlay } from '@/src/components/LevelUpOverlay';
 import { AchievementUnlockOverlay } from '@/src/components/AchievementUnlockOverlay';
+import { FEATURES } from '@/src/config/features';
 import 'react-native-reanimated';
 
 export {
@@ -119,9 +120,9 @@ export default function RootLayout() {
               }}
             />
           </Stack>
-          <XpToast />
-          <LevelUpOverlay />
-          <AchievementUnlockOverlay />
+          {FEATURES.GAMIFICATION && <XpToast />}
+          {FEATURES.GAMIFICATION && <LevelUpOverlay />}
+          {FEATURES.GAMIFICATION && <AchievementUnlockOverlay />}
         </View>
       </AuthGuard>
     </QueryClientProvider>

@@ -19,8 +19,10 @@ import { ActivityLogEntry } from '@/src/components/entry/ActivityLogEntry';
 import { CounterEntry } from '@/src/components/entry/CounterEntry';
 import { MilestoneEntry } from '@/src/components/entry/MilestoneEntry';
 import { PhotoEntry } from '@/src/components/entry/PhotoEntry';
+import { SimpleEntryForm } from '@/src/components/SimpleEntryForm';
 import { useAddEntry } from '@/src/hooks/useEntries';
 import { SkillConfig, TrackingType } from '@/src/types';
+import { FEATURES } from '@/src/config/features';
 
 function SkillEntry({
   skill,
@@ -70,7 +72,6 @@ function SkillEntry({
     );
   }
 
-  // Fallback — activity log
   return (
     <ActivityLogEntry
       skill={skill}
@@ -81,6 +82,11 @@ function SkillEntry({
   );
 }
 
+// Check if an ID is a UUID (user category) vs a hardcoded string ID
+function isUUID(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
+
 export default function CategoryLogScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const activeChildId = useChildStore((s) => s.activeChildId);
@@ -88,7 +94,28 @@ export default function CategoryLogScreen() {
   const [quickNote, setQuickNote] = useState('');
   const addEntry = useAddEntry();
 
-  const category = getCategoryById(categoryId ?? '');
+  const isUserCategory = isUUID(categoryId ?? '');
+  const category = isUserCategory ? null : getCategoryById(categoryId ?? '');
+
+  // User category — always show SimpleEntryForm
+  if (isUserCategory && activeChildId) {
+    return (
+      <>
+        <Stack.Screen options={{ headerTitle: 'Log Entry' }} />
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <SimpleEntryForm
+            categoryId={categoryId ?? ''}
+            childId={activeChildId}
+            userCategoryId={categoryId}
+          />
+        </ScrollView>
+      </>
+    );
+  }
 
   if (!category) {
     return (
@@ -103,6 +130,30 @@ export default function CategoryLogScreen() {
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Please select a child first</Text>
       </View>
+    );
+  }
+
+  // When skills tracking is off, show simple entry form instead
+  if (!FEATURES.SKILLS_TRACKING) {
+    return (
+      <>
+        <Stack.Screen
+          options={{
+            headerTitle: `${category.icon} ${category.name}`,
+          }}
+        />
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <MaskingTapeHeader title={`${category.icon} ${category.name}`} />
+          <SimpleEntryForm
+            categoryId={category.id}
+            childId={activeChildId}
+          />
+        </ScrollView>
+      </>
     );
   }
 
@@ -137,7 +188,6 @@ export default function CategoryLogScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Category header */}
         <MaskingTapeHeader title={`${category.icon} ${category.name}`} />
 
         {/* Skills list */}
@@ -161,15 +211,17 @@ export default function CategoryLogScreen() {
         <View style={styles.bottomActions}>
           <ScissorDivider />
 
-          {/* Photo capture */}
-          <View style={styles.actionSection}>
-            <Text style={styles.actionLabel}>Add a Photo</Text>
-            <PhotoEntry
-              categoryId={category.id}
-              childId={activeChildId}
-              defaultSkillId={category.skills[0].id}
-            />
-          </View>
+          {/* Photo capture — only when enabled */}
+          {FEATURES.PHOTO_ENTRIES && (
+            <View style={styles.actionSection}>
+              <Text style={styles.actionLabel}>Add a Photo</Text>
+              <PhotoEntry
+                categoryId={category.id}
+                childId={activeChildId}
+                defaultSkillId={category.skills[0].id}
+              />
+            </View>
+          )}
 
           {/* Quick note */}
           <View style={styles.actionSection}>
@@ -183,7 +235,6 @@ export default function CategoryLogScreen() {
           </View>
         </View>
 
-        {/* Spacer for bottom */}
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
 
@@ -270,7 +321,6 @@ const styles = StyleSheet.create({
     color: colors.pencilGray,
     marginBottom: spacing.sm,
   },
-  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

@@ -12,6 +12,7 @@ import { useChildStore } from '@/src/stores/childStore';
 import { useSkillProgress } from '@/src/hooks/useProgress';
 import { MaskingTapeHeader, ScissorDivider } from '@/src/components/ui';
 import { EntryTimeline } from '@/src/components/EntryTimeline';
+import { FEATURES } from '@/src/config/features';
 
 function SkillMiniBadge({
   name,
@@ -84,44 +85,45 @@ export default function CategoryDeepDiveScreen() {
         }}
       />
       <View style={styles.container}>
-        {/* Top section: header + skill badges */}
         <View style={styles.topSection}>
           <MaskingTapeHeader title={`${category.icon} ${category.name}`} />
 
-          {/* Horizontal scroll of skill mini-badges */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.badgeScroll}
-          >
-            {category.skills.map((skill) => {
-              const isLogType =
-                skill.tracking_type === 'activity_log' ||
-                skill.tracking_type === 'observation_log' ||
-                skill.tracking_type === 'topic_log';
+          {/* Skill badges — only when skills tracking is on */}
+          {FEATURES.SKILLS_TRACKING && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.badgeScroll}
+            >
+              {category.skills.map((skill) => {
+                const isLogType =
+                  skill.tracking_type === 'activity_log' ||
+                  skill.tracking_type === 'observation_log' ||
+                  skill.tracking_type === 'topic_log';
 
-              const milestoneTotal =
-                skill.milestones?.length ?? skill.items?.length ?? 0;
-              const completed = skillProgress?.[skill.id] ?? 0;
-              const total = isLogType ? completed : milestoneTotal;
+                const milestoneTotal =
+                  skill.milestones?.length ?? skill.items?.length ?? 0;
+                const completed = skillProgress?.[skill.id] ?? 0;
+                const total = isLogType ? completed : milestoneTotal;
 
-              return (
-                <SkillMiniBadge
-                  key={skill.id}
-                  name={skill.name}
-                  completed={completed}
-                  total={total}
-                  isLogType={isLogType}
-                  color={category.color}
-                />
-              );
-            })}
-          </ScrollView>
+                return (
+                  <SkillMiniBadge
+                    key={skill.id}
+                    name={skill.name}
+                    completed={completed}
+                    total={total}
+                    isLogType={isLogType}
+                    color={category.color}
+                  />
+                );
+              })}
+            </ScrollView>
+          )}
 
           <ScissorDivider />
         </View>
 
-        {/* Timeline */}
+        {/* Timeline — entry list with lesson numbers */}
         <EntryTimeline
           childId={activeChildId}
           categoryId={category.id}

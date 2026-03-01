@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { fonts, spacing } from '../../config/theme';
+import { FEATURES } from '../../config/features';
 
 interface MaskingTapeHeaderProps {
   title: string;
@@ -8,22 +9,36 @@ interface MaskingTapeHeaderProps {
 }
 
 export function MaskingTapeHeader({ title, style }: MaskingTapeHeaderProps) {
+  // Plain bold text when scrapbook theme is off
+  if (!FEATURES.SCRAPBOOK_THEME) {
+    return (
+      <View style={[styles.plainContainer, style]}>
+        <Text style={styles.plainText}>{title}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, style]}>
-      {/* Rough edge top — thin semi-transparent strip */}
       <View style={styles.roughEdgeTop} />
-
       <View style={styles.tape}>
         <Text style={styles.text}>{title}</Text>
       </View>
-
-      {/* Rough edge bottom */}
       <View style={styles.roughEdgeBottom} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  plainContainer: {
+    marginVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+  plainText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 20,
+    color: '#333333',
+  },
   container: {
     marginHorizontal: -8,
     marginVertical: spacing.md,
