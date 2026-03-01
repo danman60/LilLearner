@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Alert, ActivityIndicator, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing, borderRadius, shadows } from '@/src/config/theme';
 import { PaperBackground } from '@/src/components/ui/PaperBackground';
@@ -10,12 +10,47 @@ import { useAuthStore } from '@/src/stores/authStore';
 import { supabase } from '@/src/lib/supabase';
 import { Paths, File as ExpoFile } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { useUserPreferences, useUpsertPreferences } from '@/src/hooks/useUserPreferences';
+
+interface FeatureToggleProps {
+  label: string;
+  description: string;
+  value: boolean;
+  onToggle: () => void;
+  saving?: boolean;
+}
+
+function FeatureToggle({ label, description, value, onToggle, saving }: FeatureToggleProps) {
+  return (
+    <View style={styles.toggleRow}>
+      <View style={styles.toggleText}>
+        <Text style={styles.toggleLabel}>{label}</Text>
+        <Text style={styles.toggleDesc}>{description}</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: '#E0E0E0', true: '#5B9BD5' }}
+        thumbColor="#FFFFFF"
+        disabled={saving}
+      />
+    </View>
+  );
+}
 
 export default function SettingsScreen() {
   const router = useRouter();
   const signOut = useAuthStore((s) => s.signOut);
   const user = useAuthStore((s) => s.user);
   const [exporting, setExporting] = useState(false);
+  const { data: prefs } = useUserPreferences();
+  const upsert = useUpsertPreferences();
+
+  const handleToggle = (key: string) => {
+    if (!prefs) return;
+    const current = prefs[key as keyof typeof prefs] as boolean;
+    upsert.mutate({ [key]: !current });
+  };
 
   const handleSignOut = () => {
     Alert.alert(
@@ -89,7 +124,6 @@ export default function SettingsScreen() {
                   style: 'destructive',
                   onPress: async () => {
                     try {
-                      // Delete all user data (RLS ensures only own data)
                       await supabase.from('ll_reports').delete().eq('child_id', '').neq('id', '');
                       await supabase.from('ll_achievements').delete().neq('id', '');
                       await supabase.from('ll_xp_events').delete().neq('id', '');
@@ -117,6 +151,59 @@ export default function SettingsScreen() {
       <View style={styles.content}>
         <MaskingTapeHeader title="Settings" />
 
+        {/* Features section */}
+        {prefs && (
+          <>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Features</Text>
+              <FeatureToggle
+                label="XP & Levels"
+                description="Earn XP, level up, unlock achievements"
+                value={prefs.gamification_enabled}
+                onToggle={() => handleToggle('gamification_enabled')}
+                saving={upsert.isPending}
+              />
+              <FeatureToggle
+                label="Photo Entries"
+                description="Attach photos to log entries"
+                value={prefs.photo_entries_enabled}
+                onToggle={() => handleToggle('photo_entries_enabled')}
+                saving={upsert.isPending}
+              />
+              <FeatureToggle
+                label="Skill Tracking"
+                description="Track individual skills within categories"
+                value={prefs.skills_tracking_enabled}
+                onToggle={() => handleToggle('skills_tracking_enabled')}
+                saving={upsert.isPending}
+              />
+              <FeatureToggle
+                label="Scrapbook Theme"
+                description="Notebook paper, masking tape, craft aesthetic"
+                value={prefs.scrapbook_theme_enabled}
+                onToggle={() => handleToggle('scrapbook_theme_enabled')}
+                saving={upsert.isPending}
+              />
+              <FeatureToggle
+                label="Voice Input"
+                description="Quick log with natural language parsing"
+                value={prefs.voice_input_enabled}
+                onToggle={() => handleToggle('voice_input_enabled')}
+                saving={upsert.isPending}
+              />
+              <FeatureToggle
+                label="Book Tracking"
+                description="Track active read-aloud books"
+                value={prefs.book_tracking_enabled}
+                onToggle={() => handleToggle('book_tracking_enabled')}
+                saving={upsert.isPending}
+              />
+            </View>
+
+            <ScissorDivider style={styles.divider} />
+          </>
+        )}
+
         {/* About section */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>About</Text>
@@ -128,7 +215,7 @@ export default function SettingsScreen() {
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Version</Text>
-            <Text style={styles.infoValue}>1.0.0</Text>
+            <Text style={styles.infoValue}>1.1.0</Text>
           </View>
 
           <View style={styles.infoRow}>
@@ -137,7 +224,7 @@ export default function SettingsScreen() {
           </View>
 
           <Text style={styles.description}>
-            A scrapbook-style child development tracker to celebrate every little milestone.
+            A simple learning tracker for homeschool families.
           </Text>
         </View>
 
@@ -215,6 +302,29 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: colors.pencilGray,
     marginBottom: spacing.md,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  toggleText: {
+    flex: 1,
+    marginRight: spacing.md,
+  },
+  toggleLabel: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    color: '#333333',
+  },
+  toggleDesc: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: '#8B7E6A',
+    marginTop: 1,
   },
   infoRow: {
     flexDirection: 'row',

@@ -7,7 +7,7 @@ export const FEATURES = {
   SKILLS_TRACKING: false,
   PHOTO_ENTRIES: false,
   SCRAPBOOK_THEME: false,
-  VOICE_INPUT: false,
+  VOICE_INPUT: true,
   BOOK_TRACKING: false,
 } as const;
 

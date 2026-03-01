@@ -1,18 +1,22 @@
-import { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, fonts, spacing } from '@/src/config/theme';
 import { CATEGORIES } from '@/src/config/categories';
 import { CategoryConfig, UserCategory } from '@/src/types';
+import { ParsedEntry } from '@/src/types/voice';
 import ChildSwitcher from '@/src/components/ChildSwitcher';
 import { TodaySummary } from '@/src/components/TodaySummary';
 import { CategoryCard } from '@/src/components/CategoryCard';
 import { SimpleCategoryCard } from '@/src/components/SimpleCategoryCard';
+import { VoiceButton } from '@/src/components/VoiceButton';
+import { VoiceReviewScreen } from '@/src/components/VoiceReviewScreen';
 import { MaskingTapeHeader } from '@/src/components/ui';
 import { useChildStore } from '@/src/stores/childStore';
 import { useChildren } from '@/src/hooks/useChildren';
 import { useUserCategories } from '@/src/hooks/useUserCategories';
 import { useEntries } from '@/src/hooks/useEntries';
+import { FEATURES } from '@/src/config/features';
 
 type CategoryItem =
   | { type: 'hardcoded'; data: CategoryConfig }
@@ -24,6 +28,8 @@ export default function HomeScreen() {
   const { data: userCategories } = useUserCategories();
   const { data: allEntries } = useEntries(activeChildId ?? null);
   const router = useRouter();
+
+  const [reviewEntries, setReviewEntries] = useState<ParsedEntry[] | null>(null);
 
   useEffect(() => {
     loadActiveChild();
@@ -37,14 +43,12 @@ export default function HomeScreen() {
 
   const activeChild = children?.find((c) => c.id === activeChildId);
 
-  // Build category list: prefer user categories if any exist, else fall back to hardcoded
   const hasUserCategories = userCategories && userCategories.length > 0;
 
   const categoryItems: CategoryItem[] = hasUserCategories
     ? userCategories.map((uc) => ({ type: 'user' as const, data: uc }))
     : CATEGORIES.map((c) => ({ type: 'hardcoded' as const, data: c }));
 
-  // Count entries per user category
   const entryCounts: Record<string, number> = {};
   if (allEntries && hasUserCategories) {
     for (const entry of allEntries) {
@@ -55,13 +59,15 @@ export default function HomeScreen() {
   }
 
   const handlePress = (item: CategoryItem) => {
-    const id = item.type === 'user' ? item.data.id : item.data.id;
-    router.push(`/log/${id}`);
+    router.push(`/log/${item.data.id}`);
   };
 
   const handleLongPress = (item: CategoryItem) => {
-    const id = item.type === 'user' ? item.data.id : item.data.id;
-    router.push(`/category/${id}`);
+    router.push(`/category/${item.data.id}`);
+  };
+
+  const handleEntriesParsed = (entries: ParsedEntry[]) => {
+    setReviewEntries(entries);
   };
 
   const renderItem = ({ item, index }: { item: CategoryItem; index: number }) => {
@@ -92,6 +98,12 @@ export default function HomeScreen() {
       {activeChild ? (
         <>
           <TodaySummary child={activeChild} />
+
+          {/* Quick Log button */}
+          {FEATURES.VOICE_INPUT && (
+            <VoiceButton onEntriesParsed={handleEntriesParsed} />
+          )}
+
           <View style={styles.sectionHeader}>
             <MaskingTapeHeader title="Categories" />
             <Text style={styles.hint}>Tap to log  |  Long press to view timeline</Text>
@@ -126,6 +138,21 @@ export default function HomeScreen() {
       ) : (
         <ListHeader />
       )}
+
+      {/* Voice review modal */}
+      <Modal
+        visible={reviewEntries !== null}
+        animationType="slide"
+        onRequestClose={() => setReviewEntries(null)}
+      >
+        {reviewEntries && (
+          <VoiceReviewScreen
+            entries={reviewEntries}
+            onDone={() => setReviewEntries(null)}
+            onCancel={() => setReviewEntries(null)}
+          />
+        )}
+      </Modal>
     </View>
   );
 }

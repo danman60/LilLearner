@@ -20,7 +20,9 @@ import { CounterEntry } from '@/src/components/entry/CounterEntry';
 import { MilestoneEntry } from '@/src/components/entry/MilestoneEntry';
 import { PhotoEntry } from '@/src/components/entry/PhotoEntry';
 import { SimpleEntryForm } from '@/src/components/SimpleEntryForm';
+import { ActiveBooksList } from '@/src/components/ActiveBooksList';
 import { useAddEntry } from '@/src/hooks/useEntries';
+import { useUserCategories } from '@/src/hooks/useUserCategories';
 import { SkillConfig, TrackingType } from '@/src/types';
 import { FEATURES } from '@/src/config/features';
 
@@ -94,19 +96,34 @@ export default function CategoryLogScreen() {
   const [quickNote, setQuickNote] = useState('');
   const addEntry = useAddEntry();
 
+  const { data: userCategories } = useUserCategories();
   const isUserCategory = isUUID(categoryId ?? '');
+  const userCategory = isUserCategory
+    ? userCategories?.find((c) => c.id === categoryId)
+    : null;
   const category = isUserCategory ? null : getCategoryById(categoryId ?? '');
 
-  // User category — always show SimpleEntryForm
+  // User category — show ActiveBooksList for book categories, then SimpleEntryForm
   if (isUserCategory && activeChildId) {
+    const title = userCategory
+      ? `${userCategory.icon || ''} ${userCategory.name}`.trim()
+      : 'Log Entry';
+    const isBookCategory = userCategory?.category_type === 'book';
+
     return (
       <>
-        <Stack.Screen options={{ headerTitle: 'Log Entry' }} />
+        <Stack.Screen options={{ headerTitle: title }} />
         <ScrollView
           style={styles.container}
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
+          {isBookCategory && (
+            <ActiveBooksList
+              childId={activeChildId}
+              categoryId={categoryId ?? ''}
+            />
+          )}
           <SimpleEntryForm
             categoryId={categoryId ?? ''}
             childId={activeChildId}
