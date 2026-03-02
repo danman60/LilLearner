@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter, useSegments, useRootNavigationState, Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Gaegu_400Regular, Gaegu_700Bold } from '@expo-google-fonts/gaegu';
 import {
   Nunito_400Regular,
@@ -45,13 +46,31 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
   const { data: prefs, isLoading: prefsLoading } = useUserPreferences();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(true); // default true to avoid flash
+
+  // SKIP_AUTH: check AsyncStorage for onboarding completion
+  useEffect(() => {
+    if (!FEATURES.SKIP_AUTH) return;
+    AsyncStorage.getItem('onboarding_done').then((val) => {
+      setOnboardingDone(val === 'true');
+      setOnboardingChecked(true);
+    });
+  }, []);
 
   useEffect(() => {
-    // Skip all auth redirects during testing
-    if (FEATURES.SKIP_AUTH) return;
+    if (!rootNavigationState?.key) return;
+
+    if (FEATURES.SKIP_AUTH) {
+      if (!onboardingChecked) return;
+      const inOnboarding = segments[0] === 'onboarding';
+      if (!onboardingDone && !inOnboarding) {
+        router.replace('/onboarding/categories');
+      }
+      return;
+    }
 
     if (!initialized) return;
-    if (!rootNavigationState?.key) return; // Navigation not ready yet
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboarding = segments[0] === 'onboarding';
@@ -61,12 +80,11 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     } else if (session && inAuthGroup) {
       router.replace('/(tabs)');
     } else if (session && !inAuthGroup && !inOnboarding && !prefsLoading) {
-      // Check if onboarding is completed — if no prefs row exists, redirect to onboarding
       if (prefs === null) {
         router.replace('/onboarding/categories');
       }
     }
-  }, [session, initialized, segments, prefs, prefsLoading, rootNavigationState?.key]);
+  }, [session, initialized, segments, prefs, prefsLoading, rootNavigationState?.key, onboardingChecked, onboardingDone]);
 
   return <>{children}</>;
 }

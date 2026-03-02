@@ -8,8 +8,11 @@ import {
   Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, fonts, spacing, borderRadius, shadows } from '@/src/config/theme';
 import { useUpsertPreferences } from '@/src/hooks/useUserPreferences';
+import { FEATURES } from '@/src/config/features';
+import { useFeatureStore } from '@/src/stores/featureStore';
 
 interface PreferenceToggle {
   key: string;
@@ -59,10 +62,23 @@ export default function OnboardingPreferencesScreen() {
 
   const handleDone = async () => {
     try {
-      await upsert.mutateAsync({
-        ...prefs,
-        onboarding_completed: true,
-      });
+      if (FEATURES.SKIP_AUTH) {
+        await AsyncStorage.setItem('onboarding_prefs', JSON.stringify(prefs));
+        await AsyncStorage.setItem('onboarding_done', 'true');
+        useFeatureStore.getState().syncFromPrefs({
+          gamification_enabled: prefs.gamification_enabled ?? false,
+          skills_tracking_enabled: prefs.skills_tracking_enabled ?? false,
+          photo_entries_enabled: prefs.photo_entries_enabled ?? false,
+          scrapbook_theme_enabled: prefs.scrapbook_theme_enabled ?? false,
+          voice_input_enabled: prefs.voice_input_enabled ?? true,
+          book_tracking_enabled: prefs.book_tracking_enabled ?? true,
+        });
+      } else {
+        await upsert.mutateAsync({
+          ...prefs,
+          onboarding_completed: true,
+        });
+      }
       router.replace('/(tabs)');
     } catch {
       Alert.alert('Error', 'Could not save preferences. Please try again.');

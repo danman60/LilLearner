@@ -9,8 +9,10 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, fonts, spacing, borderRadius, shadows } from '@/src/config/theme';
 import { useBulkAddUserCategories } from '@/src/hooks/useUserCategories';
+import { FEATURES } from '@/src/config/features';
 
 interface SuggestedCategory {
   name: string;
@@ -77,7 +79,11 @@ export default function OnboardingCategoriesScreen() {
       }));
 
     try {
-      await bulkAdd.mutateAsync(toInsert);
+      if (FEATURES.SKIP_AUTH) {
+        await AsyncStorage.setItem('onboarding_categories', JSON.stringify(toInsert));
+      } else {
+        await bulkAdd.mutateAsync(toInsert);
+      }
       router.push('/onboarding/preferences');
     } catch {
       Alert.alert('Error', 'Could not save categories. Please try again.');
