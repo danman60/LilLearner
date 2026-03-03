@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { Entry, EntryType } from '../types';
 import { useAuthStore } from '../stores/authStore';
@@ -8,11 +9,30 @@ import { useAchievementUnlockStore } from '../stores/achievementUnlockStore';
 import { XP_VALUES, calculateLevel } from '../config/xp';
 import { checkAchievements } from '../utils/achievementChecker';
 import { useFeatureStore } from '../stores/featureStore';
+import { FEATURES } from '../config/features';
+
+const LOCAL_ENTRIES_KEY = 'local_entries';
+
+async function getLocalEntries(): Promise<Entry[]> {
+  const raw = await AsyncStorage.getItem(LOCAL_ENTRIES_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+async function saveLocalEntries(entries: Entry[]): Promise<void> {
+  await AsyncStorage.setItem(LOCAL_ENTRIES_KEY, JSON.stringify(entries));
+}
 
 export function useEntries(childId: string | null, categoryId?: string) {
   return useQuery({
     queryKey: ['entries', childId, categoryId],
     queryFn: async () => {
+      if (FEATURES.SKIP_AUTH) {
+        const all = await getLocalEntries();
+        let filtered = all.filter((e) => e.child_id === childId);
+        if (categoryId) filtered = filtered.filter((e) => e.category_id === categoryId);
+        return filtered.slice(0, 50);
+      }
+
       let query = supabase
         .from('ll_entries')
         .select('*')
@@ -67,6 +87,27 @@ export function useAddEntry() {
       lesson_number?: number;
       user_category_id?: string;
     }) => {
+      if (FEATURES.SKIP_AUTH) {
+        const localEntry: Entry = {
+          id: 'local-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9),
+          child_id: entry.child_id,
+          category_id: entry.category_id,
+          skill_id: entry.skill_id,
+          entry_type: entry.entry_type,
+          value: entry.value ?? null,
+          notes: entry.notes ?? null,
+          user_id: 'local',
+          media_urls: entry.media_urls ?? [],
+          logged_at: new Date().toISOString(),
+          lesson_number: entry.lesson_number ?? null,
+          user_category_id: entry.user_category_id ?? null,
+          created_at: new Date().toISOString(),
+        } as Entry;
+        const existing = await getLocalEntries();
+        await saveLocalEntries([localEntry, ...existing]);
+        return { entry: localEntry, xpAwarded: 0, leveledUp: false, newLevel: 0, newAchievementKeys: [] as string[] };
+      }
+
       // Insert the entry (always unconditional)
       const { data, error } = await supabase
         .from('ll_entries')

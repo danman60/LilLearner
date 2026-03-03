@@ -1,10 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { FEATURES } from '../config/features';
 
 export function useTodayStats(childId: string | null) {
   return useQuery({
     queryKey: ['todayStats', childId],
     queryFn: async () => {
+      if (FEATURES.SKIP_AUTH) {
+        return { todayCount: 0, totalXp: 0, currentLevel: 1 };
+      }
+
       const today = new Date().toISOString().split('T')[0];
 
       // Count today's entries

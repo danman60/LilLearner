@@ -1,15 +1,35 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { Child } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { useChildStore } from '../stores/childStore';
+import { FEATURES } from '../config/features';
+
+const LOCAL_CHILDREN_KEY = 'local_children';
+
+async function getLocalChildren(): Promise<Child[]> {
+  const raw = await AsyncStorage.getItem(LOCAL_CHILDREN_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+async function saveLocalChildren(children: Child[]): Promise<void> {
+  await AsyncStorage.setItem(LOCAL_CHILDREN_KEY, JSON.stringify(children));
+}
+
+function generateId(): string {
+  return 'local-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+}
 
 export function useChildren() {
   const user = useAuthStore((s) => s.user);
 
   return useQuery({
-    queryKey: ['children', user?.id],
+    queryKey: ['children', FEATURES.SKIP_AUTH ? 'local' : user?.id],
     queryFn: async () => {
+      if (FEATURES.SKIP_AUTH) {
+        return getLocalChildren();
+      }
       const { data, error } = await supabase
         .from('ll_children')
         .select('*')
@@ -17,7 +37,7 @@ export function useChildren() {
       if (error) throw error;
       return data as Child[];
     },
-    enabled: !!user,
+    enabled: FEATURES.SKIP_AUTH || !!user,
   });
 }
 
@@ -36,6 +56,20 @@ export function useAddChild() {
       birthdate: string;
       avatarUrl?: string;
     }) => {
+      if (FEATURES.SKIP_AUTH) {
+        const child: Child = {
+          id: generateId(),
+          user_id: 'local',
+          name,
+          birthdate,
+          avatar_url: avatarUrl ?? null,
+          created_at: new Date().toISOString(),
+        };
+        const existing = await getLocalChildren();
+        await saveLocalChildren([...existing, child]);
+        return child;
+      }
+
       const { data, error } = await supabase
         .from('ll_children')
         .insert({
@@ -50,12 +84,13 @@ export function useAddChild() {
       return data as Child;
     },
     onSuccess: async (child) => {
-      // Create the initial child_levels row
-      await supabase.from('ll_child_levels').insert({
-        child_id: child.id,
-        total_xp: 0,
-        current_level: 1,
-      });
+      if (!FEATURES.SKIP_AUTH) {
+        await supabase.from('ll_child_levels').insert({
+          child_id: child.id,
+          total_xp: 0,
+          current_level: 1,
+        });
+      }
 
       queryClient.invalidateQueries({ queryKey: ['children'] });
       setActiveChild(child.id);
@@ -76,6 +111,15 @@ export function useUpdateChild() {
       birthdate?: string;
       avatar_url?: string;
     }) => {
+      if (FEATURES.SKIP_AUTH) {
+        const children = await getLocalChildren();
+        const idx = children.findIndex((c) => c.id === id);
+        if (idx === -1) throw new Error('Child not found');
+        children[idx] = { ...children[idx], ...updates };
+        await saveLocalChildren(children);
+        return children[idx] as Child;
+      }
+
       const { data, error } = await supabase
         .from('ll_children')
         .update(updates)
@@ -96,6 +140,12 @@ export function useDeleteChild() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      if (FEATURES.SKIP_AUTH) {
+        const children = await getLocalChildren();
+        await saveLocalChildren(children.filter((c) => c.id !== id));
+        return;
+      }
+
       const { error } = await supabase
         .from('ll_children')
         .delete()
