@@ -47,7 +47,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const rootNavigationState = useRootNavigationState();
   const { data: prefs, isLoading: prefsLoading } = useUserPreferences();
   const [onboardingChecked, setOnboardingChecked] = useState(false);
-  const [onboardingDone, setOnboardingDone] = useState(true); // default true to avoid flash
+  const [onboardingDone, setOnboardingDone] = useState(false);
 
   // SKIP_AUTH: check AsyncStorage for onboarding completion
   useEffect(() => {
