@@ -46,11 +46,12 @@ export function SimpleCategoryTimeline({
   const latestLesson = entries?.find((e) => e.lesson_number != null)?.lesson_number;
   const entryCount = entries?.length ?? 0;
 
+  const entryWord = entryCount === 1 ? 'entry' : 'entries';
   const progressText = totalLessons && latestLesson
     ? `Lesson ${latestLesson} of ${totalLessons}`
     : totalLessons
-    ? `${entryCount} of ${totalLessons} entries`
-    : `${entryCount} entries`;
+    ? `${entryCount} of ${totalLessons} ${entryWord}`
+    : `${entryCount} ${entryWord}`;
 
   return (
     <View style={styles.container}>

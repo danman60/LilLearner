@@ -30,7 +30,7 @@ export function CategoryCard({ category, index, onPress, onLongPress }: Category
         style={large ? styles.cardLarge : styles.cardSmall}
       >
         <Text style={styles.icon}>{category.icon}</Text>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={styles.name} numberOfLines={2}>
           {category.name}
         </Text>
         <Text style={styles.skillCount}>

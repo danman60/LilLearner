@@ -70,7 +70,9 @@ export default function AddChildScreen() {
         name: trimmedName,
         birthdate: birthdateText,
       });
-      router.back();
+      // Navigate to Home tab instead of back() to avoid corrupting Profile tab stack
+      // when add-child was opened from a different tab (e.g., ChildSwitcher on Home)
+      router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert('Error', err?.message || 'Something went wrong. Please try again.');
     }

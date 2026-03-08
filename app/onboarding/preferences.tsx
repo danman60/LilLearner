@@ -6,6 +6,7 @@ import {
   Switch,
   Alert,
   Pressable,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -87,7 +88,7 @@ export default function OnboardingPreferencesScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
         <Text style={styles.title}>How do you want to use the app?</Text>
         <Text style={styles.subtitle}>
           Start simple — you can turn these on anytime in Settings.
@@ -109,7 +110,7 @@ export default function OnboardingPreferencesScreen() {
             </View>
           ))}
         </View>
-      </View>
+      </ScrollView>
 
       <View style={styles.footer}>
         <Pressable
@@ -133,8 +134,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  contentInner: {
     padding: spacing.lg,
     paddingTop: spacing.xxl + spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   title: {
     fontFamily: fonts.bodyBold,

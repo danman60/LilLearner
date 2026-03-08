@@ -22,6 +22,7 @@ import {
   SEASONS,
 } from '@/src/utils/reportGenerator';
 import { colors, fonts, spacing, shadows } from '@/src/config/theme';
+import { FEATURES } from '@/src/config/features';
 import { Report, Season } from '@/src/types';
 
 type TabMode = 'reports' | 'analytics';
@@ -116,6 +117,14 @@ export default function ReportsScreen() {
   const handleGenerateReport = useCallback(
     async (option: ReportOption) => {
       setShowOptions(false);
+
+      if (FEATURES.SKIP_AUTH) {
+        Alert.alert(
+          'Sign In Required',
+          'Report generation requires a signed-in account. Please sign in to generate reports.'
+        );
+        return;
+      }
 
       let range: { start: string; end: string };
       if (option.type === 'weekly') {

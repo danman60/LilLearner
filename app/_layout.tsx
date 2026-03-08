@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { View } from 'react-native';
 import { useRouter, useSegments, useRootNavigationState, Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
@@ -50,13 +50,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const [onboardingDone, setOnboardingDone] = useState(false);
 
   // SKIP_AUTH: check AsyncStorage for onboarding completion
+  // Re-check whenever segments change (handles return from onboarding)
   useEffect(() => {
     if (!FEATURES.SKIP_AUTH) return;
     AsyncStorage.getItem('onboarding_done').then((val) => {
       setOnboardingDone(val === 'true');
       setOnboardingChecked(true);
     });
-  }, []);
+  }, [segments]);
 
   useEffect(() => {
     if (!rootNavigationState?.key) return;

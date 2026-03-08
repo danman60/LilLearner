@@ -9,7 +9,7 @@ export const FEATURES = {
   SCRAPBOOK_THEME: false,
   VOICE_INPUT: true,
   BOOK_TRACKING: false,
-  SKIP_AUTH: true,
+  SKIP_AUTH: false,
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;
